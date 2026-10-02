@@ -1,0 +1,103 @@
+// Prisma schema for XAU Desk. SQLite, one trade idea per day.
+// Run `npm run db:push` to create the local dev database.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// One generated trade idea. At most one per calendar day (see @@unique on tradeDate).
+model TradeIdea {
+  id        String   @id @default(cuid())
+  tradeDate String   @unique // "YYYY-MM-DD" (UTC) — enforces max 1 trade/day
+  createdAt DateTime @default(now())
+
+  symbol    String @default("XAUUSD")
+  direction String // "BUY" | "SELL" | "NO_TRADE"
+
+  entryLow  Float?
+  entryHigh Float?
+  stopLoss  Float?
+  takeProfit1 Float?
+  takeProfit2 Float?
+  takeProfit3 Float?
+
+  riskReward Float? // RR to TP1
+  confidence Int // 0-100
+  lotSize    Float? // in cent-account lots
+
+  /// Plain-English explanation shown to the user.
+  reason String
+
+  /// JSON blob: the indicator + bias snapshot the idea was derived from,
+  /// so an idea can always be audited after the fact. No black-box logic.
+  snapshot String?
+
+  biasD1        String? // "BULLISH" | "BEARISH" | "NEUTRAL"
+  biasH4        String?
+  biasFundamental String?
+  confluences   String? // JSON array of confluence names that fired
+
+  outcome TradeOutcome?
+
+  @@index([createdAt])
+}
+
+model TradeOutcome {
+  id          String   @id @default(cuid())
+  tradeIdeaId String   @unique
+  tradeIdea   TradeIdea @relation(fields: [tradeIdeaId], references: [id], onDelete: Cascade)
+  // "OPEN" | "WIN" | "LOSS" | "NO_TRADE" | "EXPIRED" (outlived its horizon
+  // untouched) | "INDETERMINATE" (the fetched candle window did not cover the
+  // idea's life, so it was deliberately not scored).
+  status      String   @default("OPEN")
+  result      String? // "TP1" | "TP2" | "TP3" | "SL"
+  entryPrice  Float?
+  exitPrice   Float?
+  pnlUsd      Float?
+  rMultiple   Float?
+  exitTime    Int?
+  checkedAt   DateTime @updatedAt
+}
+
+model AppSettings {
+  id               String   @id @default("default")
+  equityUsd        Float?
+  riskPercent      Float    @default(1)
+  centLotStep      Float    @default(0.01)
+  centLotMin       Float    @default(0.01)
+  symbol           String   @default("XAUUSD")
+  updatedAt        DateTime @updatedAt
+}
+
+/// Cached ForexFactory calendar payloads, so a feed outage degrades gracefully.
+model NewsCache {
+  id        String   @id @default(cuid())
+  source    String // "forexfactory"
+  weekKey   String // e.g. "2026-W40"
+  payload   String // raw JSON as fetched
+  fetchedAt DateTime @default(now())
+
+  @@unique([source, weekKey])
+}
+
+/// Optional OHLC cache so repeated runs don't burn the provider rate limit.
+model CandleCache {
+  id        String   @id @default(cuid())
+  symbol    String
+  timeframe String // "M15" | "H1" | "H4" | "D1"
+  openTime  Int // unix seconds, UTC
+  open      Float
+  high      Float
+  low       Float
+  close     Float
+  volume    Float?
+  source    String
+
+  @@unique([symbol, timeframe, openTime])
+  @@index([symbol, timeframe, openTime])
+}

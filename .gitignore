@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+
+# Production
+/build
+
+# Env — never commit real keys
+.env
+.env.local
+.env*.local
+
+# Database (SQLite)
+*.db
+*.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+
+# Testing
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editors / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+
+# TS build info
+*.tsbuildinfo

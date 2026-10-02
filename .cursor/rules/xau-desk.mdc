@@ -1,0 +1,51 @@
+Build a full-stack web app called "XAU Desk": a daily trade-idea generator for gold (XAU/USD) only, for a trader using an HFM Cent account.
+
+CORE FLOW
+- Home page with one search bar. User types "XAU" and presses Analyze.
+- The app analyses and returns ONE trade idea for the day:
+  Direction (Buy/Sell/No-Trade), Entry zone (min–max), Stop Loss, TP1, TP2, TP3, Risk:Reward, Confidence score (0–100), Suggested lot size, and a plain-English "Why" explanation.
+- If conditions are poor (high-impact news within 30 min, choppy range, conflicting signals), return "No Trade Today" with the reason. Never force a trade.
+
+DATA SOURCES
+- Price data: XAU/USD OHLC for M15, H1, H4, D1. Use a free API (Twelve Data, Alpha Vantage, or yfinance via backend) behind an adapter so the provider can be swapped.
+- News/fundamentals: ForexFactory economic calendar via its public weekly JSON/XML feed (nfs.faireconomy.media/ff_calendar_thisweek.json). Filter USD high/medium impact: CPI, Core CPI, PPI, NFP, ISM Manufacturing/Services, FOMC, Fed speeches, jobless claims, GDP, retail sales. Cache results, handle failures gracefully, and do NOT scrape HTML.
+- Also pull DXY and US10Y yields as context where available.
+
+STRATEGY ENGINE (rule-based, transparent, no black box)
+1. Higher-timeframe bias: D1/H4 market structure (HH/HL vs LH/LL), 50 & 200 EMA, premium/discount zone.
+2. Fundamental bias: score each recent/upcoming USD release vs forecast. Hotter-than-expected inflation/jobs/ISM = USD-bullish = gold-bearish bias, and vice versa. Combine with DXY/yield direction into a Fundamental Score (-100 to +100).
+3. Entry (H1/M15): trade only in the direction of combined bias. Use Smart Money/Price Action confluence: key support/resistance, order blocks or supply/demand zones, liquidity sweeps, break of structure with pullback, RSI(14) and EMA(20/50) confirmation. Require at least 3 confluences.
+4. Stop Loss: beyond the structure/zone invalidation, with ATR(14) buffer.
+5. Take Profit: TP1 at 1R, TP2 at 2R, TP3 at next major liquidity/level. Minimum 1:2 RR or reject.
+6. Filters: no entries 30 min before/after high-impact news, avoid low-liquidity hours, skip if spread is abnormal or ATR is extreme.
+7. Confidence score = weighted sum of confluences + fundamental alignment.
+
+RISK MANAGEMENT (HFM Cent account)
+- Input: account balance (default $100), risk per trade (default 1–2%).
+- Compute lot size for XAUUSDc using cent-account contract specs (1 standard lot = 100 oz; cent lot = 1/100 of that; balance is in USC). Show the math and the dollar risk.
+- Hard limits: max 1 trade per day, max daily loss 3%, warn if SL distance makes minimum lot exceed risk.
+
+HISTORY PAGE
+- Save every generated idea (timestamp, direction, entry, SL, TPs, reason, bias scores).
+- Auto-track outcome using later price data: Pending / Entry Triggered / TP1 / TP2 / TP3 / SL Hit / Expired (never triggered).
+- Show win rate, average R, total R, equity curve, and per-trade detail. Filter by date and outcome.
+
+BACKTEST PAGE
+- Run the strategy over the past 1–2 years of XAU data with $100 starting balance on a simulated HFM cent account (include spread, slippage, and commission assumptions; lot sizing per the risk rules).
+- Output: net profit, win rate, profit factor, max drawdown, average RR, trades per month, equity curve, and trade list.
+- Include walk-forward / out-of-sample split (e.g. 70/30) to avoid overfitting, and warn clearly if results look curve-fitted.
+- Backtest news filter using historical calendar data where available; state limitations otherwise.
+
+UI
+- Clean dark theme, mobile-first, fast. Pages: Analyze, History, Backtest, Settings.
+- Trade card with a clear Buy/Sell badge, levels, and a small chart (TradingView Lightweight Charts) marking entry zone, SL, and TPs.
+- Always display: "Trade ideas are educational, not financial advice. Past performance doesn't guarantee future results."
+
+TECH
+- Frontend: React + Tailwind (or Next.js). Backend: Node.js (Express) or Python (FastAPI). Database: SQLite/Postgres.
+- Scheduled job generates the daily idea before the London session and updates outcomes hourly.
+- Modular code: data/, indicators/, strategy/, risk/, backtest/, api/. Unit tests for indicators and lot-size math.
+- Environment variables for API keys, a README with setup steps, and deployment instructions (Vercel/Render).
+
+DELIVERY
+Build in this order and confirm each works before moving on: (1) data + indicators, (2) strategy engine + risk calc, (3) backtester, (4) API, (5) UI, (6) history tracking. After the backtest, show me the stats and suggest parameter improvements without overfitting.

@@ -1,0 +1,240 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;600;700;800;900&family=Newsreader:ital,opsz,wght@1,6..72,500;1,6..72,600&family=Caveat:wght@600&display=swap');
+
+:root {
+  color-scheme: light;
+  --cream: #fff8e1;
+  --ink: #1a1a1a;
+  --orange: #ff6700;
+  --gold: #c4a060;
+  --buy: #2e7d4f;
+  --sell: #b3392f;
+  --line: rgba(26, 26, 26, 0.78);
+  --line-soft: rgba(26, 26, 26, 0.22);
+  --display: 'Archivo Black', 'Arial Black', sans-serif;
+  --body: 'DM Sans', sans-serif;
+  --editorial: 'Newsreader', Georgia, serif;
+}
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+
+header {
+  border-color: var(--line) !important;
+  background: var(--cream) !important;
+}
+
+header a,
+header nav a {
+  color: var(--ink) !important;
+}
+
+footer {
+  color: rgba(26, 26, 26, 0.68);
+}
+
+footer p {
+  border-color: var(--line-soft) !important;
+}
+
+button,
+input,
+select {
+  font-family: var(--body);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+.eyebrow,
+.caps-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.outline-card {
+  border: 1.5px solid var(--ink);
+  border-radius: 16px;
+  background: transparent;
+}
+
+.display-number {
+  font-family: var(--display);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.98;
+}
+
+.editorial-quote {
+  font-family: var(--editorial);
+  font-size: clamp(1.18rem, 2vw, 1.65rem);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.idea-grid {
+  display: grid;
+  gap: 15px;
+  grid-template-columns: 1fr;
+}
+
+.idea-level-grid {
+  display: grid;
+  gap: 15px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.idea-stat-card {
+  min-width: 0;
+  min-height: 142px;
+  padding: 20px;
+}
+
+.idea-price-card {
+  display: flex;
+  min-width: 0;
+  min-height: 112px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.signature {
+  font-family: 'Caveat', cursive;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.orange-button {
+  min-height: 42px;
+  border: 1.5px solid var(--ink);
+  border-radius: 10px;
+  background: var(--orange);
+  color: var(--ink);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+
+.orange-button:hover {
+  background: #ff7a21;
+}
+
+.orange-button:active {
+  transform: translateY(1px);
+}
+
+.history-equity {
+  border: 1.5px solid var(--ink);
+  border-radius: 16px;
+  background: transparent;
+}
+
+.history-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.chart-grain {
+  position: relative;
+  background: var(--cream);
+}
+
+.chart-grain::after {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  content: '';
+  inset: 48px 0 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
+}
+
+[class~="bg-white"] {
+  background-color: transparent !important;
+}
+
+[class~="bg-neutral-50"] {
+  background-color: var(--cream) !important;
+}
+
+[class~="border-neutral-200"],
+[class~="border-neutral-300"] {
+  border-color: var(--line-soft) !important;
+}
+
+[class~="text-neutral-900"],
+[class~="text-neutral-800"],
+[class~="text-neutral-700"] {
+  color: var(--ink) !important;
+}
+
+[class~="text-neutral-600"],
+[class~="text-neutral-500"],
+[class~="text-neutral-400"] {
+  color: rgba(26, 26, 26, 0.62) !important;
+}
+
+[class~="bg-neutral-900"] {
+  background-color: var(--orange) !important;
+  color: var(--ink) !important;
+}
+
+[class~="text-emerald-800"],
+[class~="text-emerald-900"] {
+  color: var(--buy) !important;
+}
+
+[class~="text-rose-800"],
+[class~="text-rose-900"] {
+  color: var(--sell) !important;
+}
+
+@media (min-width: 640px) {
+  .idea-grid {
+    grid-template-columns: 1.35fr 0.85fr;
+  }
+
+  .idea-level-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .idea-stat-card {
+    min-height: 174px;
+    padding: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
