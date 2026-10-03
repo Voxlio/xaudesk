@@ -64,6 +64,25 @@ export const USD_PROXY_NOTABLE_PERCENT = 0.5;
 /** One-day DGS10 move, in percentage points (0.05 = 5 basis points). */
 export const US10Y_NOTABLE_CHANGE = 0.05;
 
+/**
+ * Dead-bands: the smallest move in each input that counts as real evidence.
+ *
+ * These are deliberately expressed in each input's OWN units and applied before
+ * normalization, because that is the only place the numbers mean anything. A
+ * dead-band on the normalized value instead would have a different real-world
+ * threshold for every component — it divides by that component's `notable`
+ * scale — so "ignore noise" would quietly mean 0.025% on the dollar proxy and
+ * 0.0025pp on the 10-year. Judging a -0.04% UUP drift as genuine disagreement,
+ * and dropping published confidence from 80 to 50 for it, was that bug.
+ *
+ * The news component is the exception: each release is already normalized by its
+ * own `notableSurprise` before being weighted together, so its aggregate is the
+ * natural unit and there is no rawer number to compare.
+ */
+export const USD_PROXY_NOISE_PERCENT = 0.05;
+export const US10Y_NOISE_CHANGE = 0.01;
+export const NEWS_NOISE_VALUE = 0.05;
+
 /** Hours after which a release's weight has halved. */
 export const RECENCY_HALF_LIFE_HOURS = 24;
 
@@ -108,6 +127,13 @@ export interface ScoreComponent {
   /** -1..+1, dollar-oriented. */
   value: number;
   weight: number;
+  /**
+   * False when the underlying move was inside this input's dead-band, i.e. too
+   * small to be evidence either way. Decided at construction, where the raw
+   * value and its units are still in scope. Only significant components can
+   * count as disagreement in `computeConfidence`.
+   */
+  significant: boolean;
   detail: string;
 }
 
@@ -174,6 +200,7 @@ export function scoreFundamentals(
       key: 'news',
       value,
       weight: COMPONENT_WEIGHTS.news,
+      significant: Math.abs(value) > NEWS_NOISE_VALUE,
       detail: describeNews(scored, totalWeight),
     });
   } else {
@@ -193,6 +220,7 @@ export function scoreFundamentals(
       key: 'usdProxy',
       value,
       weight: COMPONENT_WEIGHTS.usdProxy,
+      significant: Math.abs(usdProxy.changePercent) > USD_PROXY_NOISE_PERCENT,
       detail:
         `${usdProxy.source} (${usdProxy.symbol}) ${format(usdProxy.last)}, ` +
         `${signed(usdProxy.changePercent, 3)}% daily change, observation ${date(usdProxy.asOf)}`,
@@ -209,6 +237,7 @@ export function scoreFundamentals(
       key: 'us10y',
       value,
       weight: COMPONENT_WEIGHTS.us10y,
+      significant: Math.abs(us10y.changeAbsolute) > US10Y_NOISE_CHANGE,
       detail:
         `${us10y.source} ${format(us10y.last)}%, ${signed(basisPoints(us10y), 1)}bp daily change, ` +
         `observation ${date(us10y.asOf)}`,
@@ -361,7 +390,7 @@ function computeConfidence(components: readonly ScoreComponent[], usdScore: numb
   const scoreSign = Math.sign(usdScore);
 
   const opposing = components
-    .filter((item) => Math.abs(item.value) > 0.05 && Math.sign(item.value) !== scoreSign)
+    .filter((item) => item.significant && Math.sign(item.value) !== scoreSign)
     .reduce((sum, item) => sum + item.weight, 0);
 
   const agreement = scoreSign === 0 ? 1 : 1 - opposing / available;

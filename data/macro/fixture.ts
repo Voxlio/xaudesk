@@ -53,8 +53,10 @@ export class FixtureMacroAdapter implements MacroAdapter {
         'SYNTHETIC-USD-PROXY',
         'Synthetic USD proxy fixture',
         this.values.usdProxyLast ?? DEFAULTS.usdProxyLast,
-        (this.values.usdProxyLast ?? DEFAULTS.usdProxyLast) *
-          ((this.values.usdProxyChangePercent ?? DEFAULTS.usdProxyChangePercent) / 100),
+        changeForPercent(
+          this.values.usdProxyLast ?? DEFAULTS.usdProxyLast,
+          this.values.usdProxyChangePercent ?? DEFAULTS.usdProxyChangePercent,
+        ),
         asOf,
         lookbackBars,
       ),
@@ -126,6 +128,25 @@ export class PartialMacroAdapter implements MacroAdapter {
 
     return snapshot;
   }
+}
+
+/**
+ * The absolute move that makes `reading()` report exactly `percent`.
+ *
+ * `reading` derives `reference = last - changeAbsolute` and then quotes the
+ * change as a percentage OF THAT REFERENCE, which is what a day-over-day
+ * percent change means. So `last * percent/100` is the wrong inverse — it is a
+ * percent of the closing value, and asking a fixture for 0.4 handed back
+ * 0.4016064257028112. A fixture whose requested inputs do not round-trip is a
+ * poor oracle: the test has to restate the implementation's arithmetic to say
+ * what it expects.
+ *
+ * Solving reference = last / (1 + percent/100) for the change gives this.
+ */
+function changeForPercent(last: number, percent: number): number {
+  const ratio = percent / 100;
+  if (!Number.isFinite(ratio) || ratio === -1) return 0;
+  return (last * ratio) / (1 + ratio);
 }
 
 function reading(

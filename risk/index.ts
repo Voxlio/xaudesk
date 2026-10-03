@@ -1,3 +1,28 @@
+/**
+ * HFM Cent XAUUSD contract assumptions — NOT YET VERIFIED.
+ *
+ * Every number below is an assumption about the broker's symbol specification,
+ * not a confirmed value, and the whole displayed risk calculation rests on them.
+ * They are named and exported rather than inlined so there is exactly one place
+ * to correct once the spec is checked.
+ *
+ * Confirm each against the XAUUSD symbol specification in the live HFM Cent
+ * account before trading real money:
+ *
+ *   STANDARD_LOT_OUNCES   100 oz per standard lot
+ *   CENT_LOT_DIVISOR      100, which makes 1 cent lot = 1 ounce
+ *   DEFAULT_CENT_LOT_STEP 0.01
+ *   DEFAULT_MIN_CENT_LOT  0.01
+ *   (no maximum lot)      unenforced — see review finding M6
+ *   price decimals        2, assumed by the round(..., 2) calls in strategy/
+ *
+ * Leverage, margin requirement and whether HFM charges commission on gold are
+ * all still unknown and are not modelled anywhere.
+ *
+ * OUNCES_PER_CENT_LOT === 1 is the load-bearing one: it is why the P&L in
+ * lib/tradeOutcomes.ts comes out right. Import it rather than assuming the 1:1,
+ * so changing CENT_LOT_DIVISOR cannot silently corrupt stored P&L.
+ */
 export const STANDARD_LOT_OUNCES = 100;
 export const CENT_LOT_DIVISOR = 100;
 export const OUNCES_PER_CENT_LOT = STANDARD_LOT_OUNCES / CENT_LOT_DIVISOR;
